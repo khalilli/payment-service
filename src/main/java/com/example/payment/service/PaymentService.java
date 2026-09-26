@@ -1,6 +1,7 @@
 package com.example.payment.service;
 
 import com.example.payment.client.AccountServiceClient;
+import com.example.payment.client.TransactionServiceClient;
 import com.example.payment.dto.payment.CreatePaymentRequest;
 import com.example.payment.dto.payment.PaymentResponse;
 import com.example.payment.entity.Payment;
@@ -19,6 +20,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final AccountServiceClient accountServiceClient;
+    private final TransactionServiceClient transactionServiceClient;
 
     public PaymentResponse createPayment(CreatePaymentRequest request) {
 
@@ -42,6 +44,18 @@ public class PaymentService {
             );
 
             savedPayment.setStatus(PaymentStatus.COMPLETED);
+
+            transactionServiceClient.createTransferDebit(
+                    request.sourceAccountId(),
+                    savedPayment.getId(),
+                    request.amount()
+            );
+
+            transactionServiceClient.createTransferCredit(
+                    request.destinationAccountId(),
+                    savedPayment.getId(),
+                    request.amount()
+            );
 
         } catch (RuntimeException exception) {
 

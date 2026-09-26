@@ -13,4 +13,11 @@ public class RestClientConfig {
                 .baseUrl("http://localhost:8081")
                 .build();
     }
+
+    @Bean
+    public RestClient transactionServiceRestClient() {
+        return RestClient.builder()
+                .baseUrl("http://localhost:8083")
+                .build();
+    }
 }
