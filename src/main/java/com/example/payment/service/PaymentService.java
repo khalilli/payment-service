@@ -9,6 +9,8 @@ import com.example.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -28,21 +30,37 @@ public class PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        accountServiceClient.withdraw(
-                request.sourceAccountId(),
-                request.amount()
-        );
+        try {
+            accountServiceClient.withdraw(
+                    request.sourceAccountId(),
+                    request.amount()
+            );
 
-        accountServiceClient.deposit(
-                request.destinationAccountId(),
-                request.amount()
-        );
+            accountServiceClient.deposit(
+                    request.destinationAccountId(),
+                    request.amount()
+            );
 
-        savedPayment.setStatus(PaymentStatus.COMPLETED);
+            savedPayment.setStatus(PaymentStatus.COMPLETED);
 
-        Payment completedPayment = paymentRepository.save(savedPayment);
+        } catch (Exception exception) {
 
-        return toPaymentResponse(completedPayment);
+            savedPayment.setStatus(PaymentStatus.FAILED);
+        }
+
+        Payment updatedPayment = paymentRepository.save(savedPayment);
+
+        return toPaymentResponse(updatedPayment);
+    }
+
+    public PaymentResponse getPayment(UUID paymentId) {
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Payment not found")
+                );
+
+        return toPaymentResponse(payment);
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {

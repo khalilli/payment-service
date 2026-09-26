@@ -32,9 +32,12 @@ public class PaymentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PaymentResponse createPayment(
-            @Valid @RequestBody CreatePaymentRequest request
-    ) {
+    public PaymentResponse createPayment(@Valid @RequestBody CreatePaymentRequest request) {
         return paymentService.createPayment(request);
+    }
+
+    @GetMapping("/{paymentId}")
+    public PaymentResponse getPayment(@PathVariable UUID paymentId) {
+        return paymentService.getPayment(paymentId);
     }
 }
