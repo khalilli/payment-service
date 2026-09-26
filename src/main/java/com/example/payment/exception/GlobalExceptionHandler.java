@@ -45,4 +45,43 @@ public class GlobalExceptionHandler {
                 "fields", errors
         );
     }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, Object> handleAccountNotFound(
+            AccountNotFoundException exception
+    ) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 404,
+                "error", "Not Found",
+                "message", exception.getMessage()
+        );
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public Map<String, Object> handleInsufficientBalance(
+            InsufficientBalanceException exception
+    ) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 422,
+                "error", "Unprocessable Entity",
+                "message", exception.getMessage()
+        );
+    }
+
+    @ExceptionHandler(AccountServiceException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Map<String, Object> handleAccountServiceException(
+            AccountServiceException exception
+    ) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 503,
+                "error", "Service Unavailable",
+                "message", exception.getMessage()
+        );
+    }
 }

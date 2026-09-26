@@ -22,21 +22,19 @@ public class PaymentService {
 
     public PaymentResponse createPayment(CreatePaymentRequest request) {
 
-        Payment payment = new Payment();
-
-        payment.setSourceAccountId(request.sourceAccountId());
-        payment.setDestinationAccountId(request.destinationAccountId());
-        payment.setAmount(request.amount());
-        payment.setCurrency("AZN");
-        payment.setStatus(PaymentStatus.PENDING);
+        Payment payment = createPaymentEntity(request);
 
         Payment savedPayment = paymentRepository.save(payment);
+
+        boolean withdrawn = false;
 
         try {
             accountServiceClient.withdraw(
                     request.sourceAccountId(),
                     request.amount()
             );
+
+            withdrawn = true;
 
             accountServiceClient.deposit(
                     request.destinationAccountId(),
@@ -45,14 +43,37 @@ public class PaymentService {
 
             savedPayment.setStatus(PaymentStatus.COMPLETED);
 
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
+
+            if (withdrawn) {
+                accountServiceClient.deposit(
+                        request.sourceAccountId(),
+                        request.amount()
+                );
+            }
 
             savedPayment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(savedPayment);
+
+            throw exception;
         }
 
         Payment updatedPayment = paymentRepository.save(savedPayment);
 
         return toPaymentResponse(updatedPayment);
+    }
+
+    private Payment createPaymentEntity(CreatePaymentRequest request) {
+
+        Payment payment = new Payment();
+
+        payment.setSourceAccountId(request.sourceAccountId());
+        payment.setDestinationAccountId(request.destinationAccountId());
+        payment.setAmount(request.amount());
+        payment.setCurrency("AZN");
+        payment.setStatus(PaymentStatus.PENDING);
+
+        return payment;
     }
 
     public PaymentResponse getPayment(UUID paymentId) {
