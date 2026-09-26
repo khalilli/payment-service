@@ -5,10 +5,12 @@ import com.example.payment.dto.payment.CreatePaymentRequest;
 import com.example.payment.dto.payment.PaymentResponse;
 import com.example.payment.entity.Payment;
 import com.example.payment.enums.PaymentStatus;
+import com.example.payment.exception.ResourceNotFoundException;
 import com.example.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -57,10 +59,18 @@ public class PaymentService {
 
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() ->
-                        new RuntimeException("Payment not found")
+                        new ResourceNotFoundException("Payment not found")
                 );
 
         return toPaymentResponse(payment);
+    }
+
+    public List<PaymentResponse> getAllPayments() {
+
+        return paymentRepository.findAll()
+                .stream()
+                .map(this::toPaymentResponse)
+                .toList();
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {
