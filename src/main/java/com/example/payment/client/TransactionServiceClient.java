@@ -1,5 +1,6 @@
 package com.example.payment.client;
 
+import com.example.payment.exception.TransactionServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -58,6 +59,14 @@ public class TransactionServiceClient {
                 .uri("/api/transactions")
                 .body(request)
                 .retrieve()
+                .onStatus(
+                        status -> status.isError(),
+                        (requestMessage, response) -> {
+                            throw new TransactionServiceException(
+                                    "Transaction Service request failed"
+                            );
+                        }
+                )
                 .toBodilessEntity();
     }
 

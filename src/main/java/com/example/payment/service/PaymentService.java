@@ -6,6 +6,7 @@ import com.example.payment.dto.payment.CreatePaymentRequest;
 import com.example.payment.dto.payment.PaymentResponse;
 import com.example.payment.entity.Payment;
 import com.example.payment.enums.PaymentStatus;
+import com.example.payment.exception.InvalidPaymentException;
 import com.example.payment.exception.ResourceNotFoundException;
 import com.example.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,10 @@ public class PaymentService {
     private final TransactionServiceClient transactionServiceClient;
 
     public PaymentResponse createPayment(CreatePaymentRequest request) {
+
+        if (request.sourceAccountId().equals(request.destinationAccountId())) {
+            throw new InvalidPaymentException("Source and destination accounts must be different");
+        }
 
         Payment payment = createPaymentEntity(request);
 

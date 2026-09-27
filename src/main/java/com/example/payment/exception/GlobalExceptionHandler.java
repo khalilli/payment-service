@@ -84,4 +84,30 @@ public class GlobalExceptionHandler {
                 "message", exception.getMessage()
         );
     }
+
+    @ExceptionHandler(TransactionServiceException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Map<String, Object> handleTransactionServiceException(
+            TransactionServiceException exception
+    ) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 503,
+                "error", "Service Unavailable",
+                "message", exception.getMessage()
+        );
+    }
+
+    @ExceptionHandler(InvalidPaymentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleInvalidPayment(
+            InvalidPaymentException exception
+    ) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 400,
+                "error", "Bad Request",
+                "message", exception.getMessage()
+        );
+    }
 }
