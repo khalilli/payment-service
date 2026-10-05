@@ -1,6 +1,7 @@
 package com.example.payment.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -109,5 +110,19 @@ public class GlobalExceptionHandler {
                 "error", "Bad Request",
                 "message", exception.getMessage()
         );
+    }
+
+    @ExceptionHandler(PaymentCompensationException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentCompensationException(
+            PaymentCompensationException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "timestamp", Instant.now(),
+                        "status", 500,
+                        "error", "Payment Compensation Failed",
+                        "message", exception.getMessage()
+                ));
     }
 }

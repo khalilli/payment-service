@@ -7,11 +7,13 @@ import com.example.payment.dto.payment.PaymentResponse;
 import com.example.payment.entity.Payment;
 import com.example.payment.enums.PaymentStatus;
 import com.example.payment.exception.InvalidPaymentException;
+import com.example.payment.exception.PaymentCompensationException;
 import com.example.payment.exception.ResourceNotFoundException;
 import com.example.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,15 +66,16 @@ public class PaymentService {
 
         } catch (RuntimeException exception) {
 
-            if (withdrawn) {
-                accountServiceClient.deposit(
-                        request.sourceAccountId(),
-                        request.amount()
-                );
-            }
-
             savedPayment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(savedPayment);
+
+            if (withdrawn) {
+                compensateSourceAccount(
+                        request.sourceAccountId(),
+                        request.amount(),
+                        exception
+                );
+            }
 
             throw exception;
         }
@@ -124,5 +127,19 @@ public class PaymentService {
                 payment.getStatus(),
                 payment.getCreatedAt()
         );
+    }
+
+    private void compensateSourceAccount(
+            UUID accountId,
+            BigDecimal amount,
+            RuntimeException originalException
+    ) {
+        try {
+            accountServiceClient.deposit(accountId, amount);
+        } catch (RuntimeException compensationException) {
+            throw new PaymentCompensationException(
+                    "Payment failed and source account compensation also failed"
+            );
+        }
     }
 }
